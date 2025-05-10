@@ -67,52 +67,6 @@ def get_filtered_tokens(chain: str = "solana", limit: int = 10,
         
     return make_request(url=url, params=params, headers=get_headers())
 
-# Strategy Builder
-def get_filtered_tokens(chain: str = "solana", limit: int = 10, 
-                      min_price: Optional[float] = None, max_price: Optional[float] = None,
-                      min_volume_24h: Optional[float] = None, min_market_cap: Optional[float] = None) -> Dict[str, Any]:
-    """دریافت توکن‌های فیلتر شده"""
-    url = f"{MORALIS_INDEX_BASE_URL}/discovery/tokens"
-    params = {
-        "chain": chain,
-        "limit": limit
-    }
-    
-    if min_price is not None:
-        params["min_price"] = min_price
-    if max_price is not None:
-        params["max_price"] = max_price
-    if min_volume_24h is not None:
-        params["min_volume_24h"] = min_volume_24h
-    if min_market_cap is not None:
-        params["min_market_cap"] = min_market_cap
-        
-    return make_request(url=url, params=params, headers=get_headers())
-
-# Pump Fun Tokens
-def get_new_tokens_by_exchange(exchange: str = "pumpfun", limit: int = 100) -> Dict[str, Any]:
-    """دریافت توکن‌های جدید بر اساس صرافی"""
-    url = f"{MORALIS_SOLANA_BASE_URL}/token/mainnet/exchange/{exchange}/new"
-    params = {"limit": limit}
-    return make_request(url=url, params=params, headers=get_headers())
-
-def get_bonding_tokens_by_exchange(exchange: str = "pumpfun", limit: int = 100) -> Dict[str, Any]:
-    """دریافت توکن‌های در فاز پیوند بر اساس صرافی"""
-    url = f"{MORALIS_SOLANA_BASE_URL}/token/mainnet/exchange/{exchange}/bonding"
-    params = {"limit": limit}
-    return make_request(url=url, params=params, headers=get_headers())
-
-def get_graduated_tokens_by_exchange(exchange: str = "pumpfun", limit: int = 100) -> Dict[str, Any]:
-    """دریافت توکن‌های فارغ‌التحصیل شده بر اساس صرافی"""
-    url = f"{MORALIS_SOLANA_BASE_URL}/token/mainnet/exchange/{exchange}/graduated"
-    params = {"limit": limit}
-    return make_request(url=url, params=params, headers=get_headers())
-
-def get_token_bonding_status(token_address: str) -> Dict[str, Any]:
-    """دریافت وضعیت پیوند بر اساس آدرس توکن"""
-    url = f"{MORALIS_SOLANA_BASE_URL}/token/mainnet/{token_address}/bonding-status"
-    return make_request(url=url, headers=get_headers())
-
 # Token Prices & Charts
 def get_token_price(network: str, address: str) -> Dict[str, Any]:
     """دریافت قیمت توکن"""
@@ -198,7 +152,7 @@ def get_aggregated_token_pair_stats(network: str, address: str) -> Dict[str, Any
     return make_request(url=url, headers=get_headers())
 
 # Token Swaps
-def get_swaps_by_pair_address(network: str, pair_address: str, limit: int = 100) -> Dict[str, Any]:
+def get_swaps_by_pair_address(network: str, pair_address: str, limit: int = 100, min_value_usd: Optional[float] = None) -> Dict[str, Any]:
     """دریافت سوآپ‌ها بر اساس آدرس جفت"""
     # اطمینان از استفاده از mainnet
     if network.lower() != "mainnet":
@@ -207,9 +161,22 @@ def get_swaps_by_pair_address(network: str, pair_address: str, limit: int = 100)
     
     url = f"{MORALIS_SOLANA_BASE_URL}/token/{network}/pairs/{pair_address}/swaps"
     params = {"limit": limit}
-    return make_request(url=url, params=params, headers=get_headers())
+    
+    result = make_request(url=url, params=params, headers=get_headers())
+    
+    # اعمال فیلتر بر اساس مقدار دلاری سوآپ
+    if min_value_usd is not None and 'data' in result and isinstance(result['data'], list):
+        filtered_data = [
+            swap for swap in result['data'] 
+            if 'value_usd' in swap and swap['value_usd'] is not None and float(swap['value_usd']) >= min_value_usd
+        ]
+        result['data'] = filtered_data
+        if 'total' in result:
+            result['total'] = len(filtered_data)
+    
+    return result
 
-def get_swaps_by_token_address(network: str, token_address: str, limit: int = 100) -> Dict[str, Any]:
+def get_swaps_by_token_address(network: str, token_address: str, limit: int = 100, min_value_usd: Optional[float] = None) -> Dict[str, Any]:
     """دریافت سوآپ‌ها بر اساس آدرس توکن"""
     # اطمینان از استفاده از mainnet
     if network.lower() != "mainnet":
@@ -218,9 +185,22 @@ def get_swaps_by_token_address(network: str, token_address: str, limit: int = 10
     
     url = f"{MORALIS_SOLANA_BASE_URL}/token/{network}/{token_address}/swaps"
     params = {"limit": limit}
-    return make_request(url=url, params=params, headers=get_headers())
+    
+    result = make_request(url=url, params=params, headers=get_headers())
+    
+    # اعمال فیلتر بر اساس مقدار دلاری سوآپ
+    if min_value_usd is not None and 'data' in result and isinstance(result['data'], list):
+        filtered_data = [
+            swap for swap in result['data'] 
+            if 'value_usd' in swap and swap['value_usd'] is not None and float(swap['value_usd']) >= min_value_usd
+        ]
+        result['data'] = filtered_data
+        if 'total' in result:
+            result['total'] = len(filtered_data)
+    
+    return result
 
-def get_swaps_by_wallet_address(network: str, wallet_address: str, limit: int = 100) -> Dict[str, Any]:
+def get_swaps_by_wallet_address(network: str, wallet_address: str, limit: int = 100, min_value_usd: Optional[float] = None) -> Dict[str, Any]:
     """دریافت سوآپ‌ها بر اساس آدرس کیف پول"""
     # اطمینان از استفاده از mainnet
     if network.lower() != "mainnet":
@@ -229,7 +209,20 @@ def get_swaps_by_wallet_address(network: str, wallet_address: str, limit: int = 
     
     url = f"{MORALIS_SOLANA_BASE_URL}/account/{network}/{wallet_address}/swaps"
     params = {"limit": limit}
-    return make_request(url=url, params=params, headers=get_headers())
+    
+    result = make_request(url=url, params=params, headers=get_headers())
+    
+    # اعمال فیلتر بر اساس مقدار دلاری سوآپ
+    if min_value_usd is not None and 'data' in result and isinstance(result['data'], list):
+        filtered_data = [
+            swap for swap in result['data'] 
+            if 'value_usd' in swap and swap['value_usd'] is not None and float(swap['value_usd']) >= min_value_usd
+        ]
+        result['data'] = filtered_data
+        if 'total' in result:
+            result['total'] = len(filtered_data)
+    
+    return result
 
 # Token Snipers
 def get_snipers_by_pair_address(network: str, pair_address: str) -> Dict[str, Any]:
@@ -272,4 +265,3 @@ def get_portfolio(network: str, address: str) -> Dict[str, Any]:
     
     url = f"{MORALIS_SOLANA_BASE_URL}/account/{network}/{address}/portfolio"
     return make_request(url=url, headers=get_headers())
-

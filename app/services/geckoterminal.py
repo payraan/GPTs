@@ -22,11 +22,6 @@ def get_trending_pools_by_network(network: str) -> Dict[str, Any]:
     url = f"{GECKOTERMINAL_BASE_URL}/networks/{network}/trending_pools"
     return make_request(url=url, headers=get_headers())
 
-def get_token_by_address(network: str, token_address: str) -> Dict[str, Any]:
-    """اطلاعات یک توکن خاص در یک شبکه را دریافت می‌کند"""
-    url = f"{GECKOTERMINAL_BASE_URL}/networks/{network}/tokens/{token_address}"
-    return make_request(url=url, headers=get_headers())
-
 def get_token_info(network: str, token_address: str) -> Dict[str, Any]:
     """اطلاعات خاص یک توکن در یک شبکه را دریافت می‌کند"""
     url = f"{GECKOTERMINAL_BASE_URL}/networks/{network}/tokens/{token_address}/info"

@@ -34,38 +34,6 @@ async def get_filtered_tokens(
     """دریافت توکن‌های فیلتر شده"""
     return moralis.get_filtered_tokens(chain, limit, min_price, max_price, min_volume_24h, min_market_cap)
 
-# Pump Fun Tokens
-@router.get("/token/mainnet/exchange/{exchange}/new")
-async def get_new_tokens_by_exchange(
-    exchange: str = Path(..., description="نام صرافی"),
-    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100)
-):
-    """دریافت توکن‌های جدید بر اساس صرافی"""
-    return moralis.get_new_tokens_by_exchange(exchange, limit)
-
-@router.get("/token/mainnet/exchange/{exchange}/bonding")
-async def get_bonding_tokens_by_exchange(
-    exchange: str = Path(..., description="نام صرافی"),
-    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100)
-):
-    """دریافت توکن‌های در فاز پیوند بر اساس صرافی"""
-    return moralis.get_bonding_tokens_by_exchange(exchange, limit)
-
-@router.get("/token/mainnet/exchange/{exchange}/graduated")
-async def get_graduated_tokens_by_exchange(
-    exchange: str = Path(..., description="نام صرافی"),
-    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100)
-):
-    """دریافت توکن‌های فارغ‌التحصیل شده بر اساس صرافی"""
-    return moralis.get_graduated_tokens_by_exchange(exchange, limit)
-
-@router.get("/token/mainnet/{token_address}/bonding-status")
-async def get_token_bonding_status(
-    token_address: str = Path(..., description="آدرس توکن")
-):
-    """دریافت وضعیت پیوند بر اساس آدرس توکن"""
-    return moralis.get_token_bonding_status(token_address)
-
 # Token Prices & Charts
 @router.get("/token/{network}/{address}/price")
 async def get_token_price(
@@ -167,7 +135,8 @@ async def get_aggregated_token_pair_stats(
 async def get_swaps_by_pair_address(
     network: str = Path(..., description="شبکه (فقط mainnet مجاز است)"),
     pair_address: str = Path(..., description="آدرس جفت"),
-    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100)
+    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100),
+    min_value_usd: Optional[float] = Query(None, description="حداقل ارزش سوآپ به دلار")
 ):
     """دریافت سوآپ‌ها بر اساس آدرس جفت"""
     # اعتبارسنجی شبکه
@@ -177,13 +146,14 @@ async def get_swaps_by_pair_address(
             status_code=400, 
             detail="برای API موریالیس سولانا فقط شبکه 'mainnet' مجاز است"
         )
-    return moralis.get_swaps_by_pair_address("mainnet", pair_address, limit)
+    return moralis.get_swaps_by_pair_address("mainnet", pair_address, limit, min_value_usd)
 
 @router.get("/token/{network}/{token_address}/swaps")
 async def get_swaps_by_token_address(
     network: str = Path(..., description="شبکه (فقط mainnet مجاز است)"),
     token_address: str = Path(..., description="آدرس توکن"),
-    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100)
+    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100),
+    min_value_usd: Optional[float] = Query(None, description="حداقل ارزش سوآپ به دلار")
 ):
     """دریافت سوآپ‌ها بر اساس آدرس توکن"""
     # اعتبارسنجی شبکه
@@ -193,13 +163,14 @@ async def get_swaps_by_token_address(
             status_code=400, 
             detail="برای API موریالیس سولانا فقط شبکه 'mainnet' مجاز است"
         )
-    return moralis.get_swaps_by_token_address("mainnet", token_address, limit)
+    return moralis.get_swaps_by_token_address("mainnet", token_address, limit, min_value_usd)
 
 @router.get("/account/{network}/{wallet_address}/swaps")
 async def get_swaps_by_wallet_address(
     network: str = Path(..., description="شبکه (فقط mainnet مجاز است)"),
     wallet_address: str = Path(..., description="آدرس کیف پول"),
-    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100)
+    limit: int = Query(100, description="محدودیت تعداد نتایج", le=100),
+    min_value_usd: Optional[float] = Query(None, description="حداقل ارزش سوآپ به دلار")
 ):
     """دریافت سوآپ‌ها بر اساس آدرس کیف پول"""
     # اعتبارسنجی شبکه
@@ -209,7 +180,7 @@ async def get_swaps_by_wallet_address(
             status_code=400, 
             detail="برای API موریالیس سولانا فقط شبکه 'mainnet' مجاز است"
         )
-    return moralis.get_swaps_by_wallet_address("mainnet", wallet_address, limit)
+    return moralis.get_swaps_by_wallet_address("mainnet", wallet_address, limit, min_value_usd)
 
 # Token Snipers
 @router.get("/token/{network}/pairs/{pair_address}/snipers")
@@ -272,4 +243,3 @@ async def get_portfolio(
             detail="برای API موریالیس سولانا فقط شبکه 'mainnet' مجاز است"
         )
     return moralis.get_portfolio("mainnet", address)
-
